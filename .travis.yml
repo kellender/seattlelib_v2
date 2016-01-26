@@ -62,6 +62,34 @@ matrix:
       python: '2.7'
       os: linux
 
+
+# The below are configurations for Linux instances with net-tools!!!
+ # Python 2.5 on Linux
+    - language: perl
+      python: '2.5'
+      os: linux
+      install:
+        - export DEBIAN_FRONTEND=noninteractive
+        - sudo apt-add-repository -y ppa:fkrull/deadsnakes
+        - sudo apt-get -y install python2.5
+        - sudo apt-get install net-tools
+        - sudo ln -sf /usr/bin/python2.5 /usr/bin/python
+        - sudo ln -sf /usr/bin/python2.5 /usr/bin/python2
+        - sudo ln -sf /usr/bin/pydoc2.5 /usr/bin/pydoc
+        - sudo ln -sf /usr/bin/pygettext2.5 /usr/bin/pygettext
+ # Python 2.6 on Linux
+    - language: python
+      python: '2.6'
+      os: linux
+      install:
+        - sudo apt-get install net-tools
+ # Python 2.7 on Linux
+    - language: python
+      python: '2.7'
+      os: linux
+      install:
+        - sudo apt-get install net-tools
+
 script:
   - python --version
   - cd ./scripts
