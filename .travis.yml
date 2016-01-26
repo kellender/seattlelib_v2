@@ -48,7 +48,6 @@ matrix:
       install:
         - export DEBIAN_FRONTEND=noninteractive
         - sudo apt-add-repository -y ppa:fkrull/deadsnakes
-        - sudo apt-get update
         - sudo apt-get -y install python2.5
         - sudo ln -sf /usr/bin/python2.5 /usr/bin/python
         - sudo ln -sf /usr/bin/python2.5 /usr/bin/python2
@@ -62,33 +61,6 @@ matrix:
     - language: python
       python: '2.7'
       os: linux
-
-  # Python 2.5 on Linux
-      - language: perl
-        python: '2.5'
-        os: linux
-        install:
-          - export DEBIAN_FRONTEND=noninteractive
-          - sudo apt-add-repository -y ppa:fkrull/deadsnakes
-          - sudo apt-get update
-          - sudo apt-get -y install python2.5
-          - sudo ln -sf /usr/bin/python2.5 /usr/bin/python
-          - sudo ln -sf /usr/bin/python2.5 /usr/bin/python2
-          - sudo ln -sf /usr/bin/pydoc2.5 /usr/bin/pydoc
-          - sudo ln -sf /usr/bin/pygettext2.5 /usr/bin/pygettext
-          - sudo apt-get net-tools
-   # Python 2.6 on Linux
-      - language: python
-        python: '2.6'
-        os: linux
-        install:
-          - sudo apt-get net-tools
-   # Python 2.7 on Linux
-      - language: python
-        python: '2.7'
-        os: linux
-        install:
-          - sudo apt-get net-tools
 
 script:
   - python --version
