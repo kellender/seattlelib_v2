@@ -1,4 +1,5 @@
-https://github.com/SeattleTestbed/repy_v2 ../DEPENDENCIES/repy_v2
+https://github.com/kellender/repy_v2 -b network_status_substitute ../DEPENDENCIES/repy_v2
 https://github.com/SeattleTestbed/portability ../DEPENDENCIES/portability
 https://github.com/SeattleTestbed/common ../DEPENDENCIES/common
 https://github.com/SeattleTestbed/utf ../DEPENDENCIES/utf
+https://github.com/SeattleTestbed/affix ../DEPENDENCIES/affix

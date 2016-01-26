@@ -20,13 +20,21 @@ def incoming(remoteip, remoteport, sock, thiscommhandle, listencommhandle):
 tpool = ThreadPool()
 tpool.start()
 
+# all ports???
+log(libsocket.get_connports(listen_ip))
+
 # Setup a listener
 listen_ip = getmyip()
 listen_port = libsocket.get_connports(listen_ip)[0]
+
 stop_func = waitforconn(listen_ip, listen_port, incoming, tpool)
 
 # Connect 1 socket
+log(listen_ip)
+log(listen_port)
 s1 = openconn(listen_ip, listen_port)
+log(listen_ip)
+log(listen_port)
 
 # Sleep a bit
 sleep(0.2)
@@ -36,7 +44,11 @@ stop_func(False) # DO NOT destroy the thread pool
 stop_func = waitforconn(listen_ip, listen_port, incoming, tpool)
 
 # Connect another socket
+log(listen_ip)
+log(listen_port)
 s2 = openconn(listen_ip, listen_port)
+log(listen_ip)
+log(listen_port)
 
 # Sleep a bit
 sleep(0.2)
@@ -51,4 +63,3 @@ stop_func(True)
 # Close the sockets
 s1.close()
 s2.close()
-

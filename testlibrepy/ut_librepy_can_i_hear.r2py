@@ -1,0 +1,133 @@
+def create_client_handler(remote_ip, remote_port, client_socket):
+  """
+  Server-mode function to construct a function that handles 
+  the client connected over client_socket. (The returned function 
+  cannot take arguments as it will be called by createthread.)
+  """
+  try:
+    # Receive the client's message
+    raw_client_message = session.session_recvmessage(client_socket)
+
+    # Parse it
+    client_message = serialize.serialize_deserializedata(raw_client_message)
+    local_ip_and_port = xor_strings(
+        client_message["scrambled local ip and desired port"], 
+        client_message["magic cookie"])
+    # We don't actually use the client's local IP 
+    # in the server code...
+    local_ip, port_string = local_ip_and_port.split(":")
+
+    # This is the port we will connect to
+    desired_port = int(port_string)
+  
+    apparent_ip_and_port = remote_ip + ":" + str(remote_port)
+
+    magic_cookie = randombytes()[:len(apparent_ip_and_port)]
+    scrambled_apparent_ip_and_port = xor_strings(apparent_ip_and_port, 
+  magic_cookie)
+
+    test_message = randombytes()
+    reply_dict = {"scrambled apparent ip and source port": 
+  scrambled_apparent_ip_and_port,
+  "magic cookie": magic_cookie,
+  "test message": test_message} 
+    reply = serialize.serialize_serializedata(reply_dict)
+    session.session_sendmessage(client_socket, reply)
+    # Give the client some time to parse and get ready for 
+    # receiving the test message.
+    sleep(2)
+
+    # The client now knows its apparent IP and source port from 
+    # the control connection; let's open up a connection to the 
+    # desired port.
+    allowed_ports = list(getresources()[0]["connport"])
+    random.random_shuffle(allowed_ports)
+    for local_port in allowed_ports:
+      try:
+        logtn("Trying to connect to client", remote_ip, "on port", 
+            desired_port, "from", getmyip(), "port", local_port)
+        # Again, use a timeoutsocket to protect against malicious clients
+        probe_socket = sockettimeout.timeout_openconnection(remote_ip, 
+            desired_port, getmyip(), local_port, 10)
+        logtn("Connected!")
+        break
+      except (AddressBindingError, DuplicateTupleError, 
+          AlreadyListeningError, CleanupInProgressError, 
+          RepyArgumentError), e:
+        logtn("Unsuccessful,", repr(e))
+        continue
+      except (TimeoutError, ConnectionRefusedError):
+        # Notify the client that we couldn't connect. 
+        session.session_sendmessage(client_socket, 
+          "Connection from " + getmyip() + ":" + str(local_port) + 
+          " to " + remote_ip + ":" + str(desired_port) + 
+          " refused (or timed out). Giving up.")
+        client_socket.close()
+        raise
+
+    # We have a probe_socket! Send the test message and close it, 
+    # report over the control connection that we succeeded.
+    logtn("Sending test message")
+    session.session_sendmessage(probe_socket, test_message)
+    logtn("Done.")
+    try:
+      probe_socket.close()
+    except SocketClosedRemote:
+      # The remote side closed before us. Never mind.
+      pass
+
+    success_message = "Successfully connected from " + getmyip() + \
+        ":" + str(local_port) + " to " + remote_ip + ":" + str(desired_port)
+
+    logtn(success_message)
+    session.session_sendmessage(client_socket, success_message)
+    try:
+      client_socket.close()
+    except SocketClosedRemote:
+      # The remote side closed before us. Never mind.
+      pass
+
+    except Exception, e:
+      # This is the catch-all clause for things we can't sensibly handle
+      logtn("Caught error when serving client", remote_ip, "on port", 
+         remote_port, " -- ", repr(e))
+      # Close down all of our sockets. (We need to try/except here 
+      # as the sockets needn't exist or could have been closed on the 
+      # remote side already).
+    try:
+      client_socket.close()
+    except:
+      pass
+    try:
+      probe_socket.close()
+    except:
+      pass
+        
+  # Return the inner function that uses the outer function's parameters
+  return client_handler
+
+
+
+# (remote_ip, remote_port, raw_client_socket) = server_socket.getconnection()
+# client_socket = sockettimeout.timeout_socket(raw_client_socket)
+
+# listen_ip = getmyip()
+# listen_port = libsocket.get_connports(listen_ip)[0]
+# create_client_handler(listen_ip, listen_port)
+
+
+
+(remote_ip, remote_port, raw_client_socket) = server_socket.getconnection()
+logtn("Got connection from", remote_ip, remote_port)
+# Enforce timeout on the connection so that evil clients 
+# can't block us indefinitely
+client_socket = sockettimeout.timeout_socket(raw_client_socket)
+client_handler = create_client_handler(remote_ip, remote_port, 
+  client_socket)
+try:
+  logtn("Starting handler for", remote_ip, remote_port)
+  createthread(client_handler)
+except ResourceExhaustedError:
+  logtn("Insufficient resources for client", remote_ip, "on port", 
+      remote_port, " -- closing socket.")
+  client_socket.close()
