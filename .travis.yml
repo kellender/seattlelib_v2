@@ -69,4 +69,5 @@ script:
   - python initialize.py
   - python build.py -t
   - cd ../RUNNABLE
+  - ls
   - python utf.py -a
