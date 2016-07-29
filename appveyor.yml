@@ -16,4 +16,5 @@ test_script:
   - python initialize.py
   - python build.py -t
   - cd ../RUNNABLE
-  - python utf.py -a
+  - python repy.py restrictions.default dylink.r2py ut_seattlelib_tcptime.py
+
